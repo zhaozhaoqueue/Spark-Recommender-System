@@ -98,7 +98,7 @@ object UserBasedCF {
 
   def writeToHive(df_recommend: DataFrame, table_name: String) = {
     import df_recommend.sparkSession.sql
-    sql("create table " + table_name + "(uid int, recommend_list) stored as parquet")
+    sql("create table " + table_name + "(uid int, recommend_list string) stored as parquet")
     df_recommend.write.mode(SaveMode.Overwrite).saveAsTable(table_name)
   }
 }

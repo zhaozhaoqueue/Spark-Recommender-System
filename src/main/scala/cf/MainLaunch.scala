@@ -1,6 +1,6 @@
-package user
+package cf
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 object MainLaunch {
   def main(args: Array[String]) = {
@@ -30,9 +30,18 @@ object MainLaunch {
       val df_sim_sorted = UserBasedCF.getUserSimilarities(df, 10)
       val df_recommend = UserBasedCF.getRecommendItemList(df_sim_sorted, df, 10)
       // write to hive table
-      UserBasedCF.writeToHive(df_recommend, table_write)
+      writeToHive(df_recommend, table_write)
+    }else if(class_to_launch == "item"){
+      val df_sim_list = ItemBasedCF.getItemSimilaritiesADC(df)
+      val df_recommend = ItemBasedCF.getRatePredictionList(df, df_sim_list)
+      // write to hive table
+      writeToHive(df_recommend, table_write)
     }
+  }
 
-
+  def writeToHive(df_recommend: DataFrame, table_name: String) = {
+    import df_recommend.sparkSession.sql
+    sql("create table " + table_name + "(uid int, recommend_list string) stored as parquet")
+    df_recommend.write.mode(SaveMode.Overwrite).saveAsTable(table_name)
   }
 }
